@@ -7,6 +7,32 @@ rules:
 - apiGroups:
   - email.example.com
   resources:
+  - emails
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - email.example.com
+  resources:
+  - emails/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - email.example.com
+  resources:
+  - emails/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - email.example.com
+  resources:
   - emailsenderconfigs
   verbs:
   - create
