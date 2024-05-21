@@ -18,11 +18,17 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/mailersend/mailersend-go"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	emailv1 "email-operator/api/v1"
 )
@@ -47,9 +53,95 @@ type EmailReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.17.3/pkg/reconcile
 func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
+	// Fetch the Email instance
+	email := &emailv1.Email{}
+	err := r.Get(ctx, req.NamespacedName, email)
+	if err != nil {
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-	// TODO(user): your logic here
+	// Log the creation or update action
+	if email.Generation == 1 {
+		logger.Info("Created new Email", "Email", email.Name)
+	} else {
+		logger.Info("Updated existing Email", "Email", email.Name)
+	}
+
+	// Fetch the EmailSenderConfig instance
+	emailSenderConfig := &emailv1.EmailSenderConfig{}
+	err = r.Get(ctx, types.NamespacedName{Name: email.Spec.SenderConfigRef, Namespace: req.Namespace}, emailSenderConfig)
+	if err != nil {
+		email.Status.DeliveryStatus = "Failed"
+		if errors.IsNotFound(err) {
+			email.Status.Error = fmt.Sprintf("EmailSenderConfig %s not found", email.Spec.SenderConfigRef)
+		} else {
+			email.Status.Error = fmt.Sprintf("Failed to get EmailSenderConfig: %v", err)
+		}
+		if updateErr := r.Status().Update(ctx, email); updateErr != nil {
+			logger.Error(updateErr, "Failed to update Email status")
+			return ctrl.Result{}, updateErr
+		}
+		return ctrl.Result{}, err
+	}
+
+	// Retrieve the API token from the secret
+	secret := &corev1.Secret{}
+	err = r.Get(ctx, types.NamespacedName{Name: emailSenderConfig.Spec.APITokenSecretRef, Namespace: req.Namespace}, secret)
+	if err != nil {
+		email.Status.DeliveryStatus = "Failed"
+		email.Status.Error = fmt.Sprintf("Failed to get secret: %v", err)
+		if updateErr := r.Status().Update(ctx, email); updateErr != nil {
+			logger.Error(updateErr, "Failed to update Email status")
+			return ctrl.Result{}, updateErr
+		}
+		return ctrl.Result{}, err
+	}
+
+	apiToken := string(secret.Data["apiToken"])
+	subject := email.Spec.Subject
+	text := email.Spec.Body
+	from := mailersend.From{
+		Name:  emailSenderConfig.Spec.SenderEmail,
+		Email: emailSenderConfig.Spec.SenderEmail,
+	}
+	recipients := []mailersend.Recipient{
+		{
+			Name:  email.Spec.RecipientEmail,
+			Email: email.Spec.RecipientEmail,
+		},
+	}
+	ms := mailersend.NewMailersend(apiToken)
+	message := ms.Email.NewMessage()
+	message.SetFrom(from)
+	message.SetRecipients(recipients)
+	message.SetSubject(subject)
+	message.SetText(text)
+
+	res, err := ms.Email.Send(ctx, message)
+	if err != nil {
+		email.Status.DeliveryStatus = "Failed"
+		email.Status.Error = fmt.Sprintf("Failed to send email: %v", err)
+		if updateErr := r.Status().Update(ctx, email); updateErr != nil {
+			logger.Error(updateErr, "Failed to update Email status")
+			return ctrl.Result{}, updateErr
+		}
+		return ctrl.Result{}, err
+	}
+	email.Status.DeliveryStatus = "Success"
+	email.Status.Error = ""
+	email.Status.MessageID = res.Header.Get("X-Message-Id")
+	if updateErr := r.Status().Update(ctx, email); updateErr != nil {
+		logger.Error(updateErr, "Failed to update Email status")
+		return ctrl.Result{}, updateErr
+	}
+
+	logger.Info("Email sent successfully",
+		"MessageID", email.Status.MessageID,
+		"Subject", email.Spec.Subject,
+		"From", emailSenderConfig.Spec.SenderEmail,
+		"To", email.Spec.RecipientEmail,
+	)
 
 	return ctrl.Result{}, nil
 }
@@ -58,5 +150,6 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 func (r *EmailReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&emailv1.Email{}).
+		WithEventFilter(predicate.GenerationChangedPredicate{}).
 		Complete(r)
 }

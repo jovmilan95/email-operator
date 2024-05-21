@@ -47,9 +47,27 @@ type EmailSenderConfigReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.17.3/pkg/reconcile
 func (r *EmailSenderConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	logger := log.FromContext(ctx)
+	// Fetch the Email instance
+	emailSenderConfig := &emailv1.EmailSenderConfig{}
+	err := r.Get(ctx, req.NamespacedName, emailSenderConfig)
+	if err != nil {
+		logger.Error(err, "Failed to get EmailSenderConfig",
+			"EmailSenderConfig", emailSenderConfig.Name)
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+	// Log the creation or update action
+	action := "Updated existing"
+	if emailSenderConfig.Generation == 1 {
+		action = "Created new"
+	}
 
-	// TODO(user): your logic here
+	logger.Info(action+" EmailSenderConfig",
+		"Name", emailSenderConfig.Name,
+		"senderEmail", emailSenderConfig.Spec.SenderEmail,
+		"secret", emailSenderConfig.Spec.APITokenSecretRef,
+		"generation", emailSenderConfig.Generation,
+	)
 
 	return ctrl.Result{}, nil
 }

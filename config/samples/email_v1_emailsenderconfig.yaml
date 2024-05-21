@@ -6,5 +6,5 @@ metadata:
     app.kubernetes.io/managed-by: kustomize
   name: emailsenderconfig-sample
 spec:
-  apiTokenSecretRef: "08c775409a7869f59eda96b11efdb2f5"
-  senderEmail: "jovmilan995@gmail.com"
+  apiTokenSecretRef: "mailersenttoken"
+  senderEmail: "test@trial-pq3enl60n58l2vwr.mlsender.net"
