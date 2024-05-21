@@ -11,8 +11,14 @@ rules:
     resources: ["secrets"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["email.example.com"]
-    resources: ["emails", "emailsenderconfigs"]
-    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    resources: ["emailsenderconfigs"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["email.example.com"]
+    resources: ["emails"]
+    verbs: ["get", "list", "watch", "create"]
+  - apiGroups: ["email.example.com"]
+    resources: ["emails/status"]
+    verbs: ["get", "list", "watch", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

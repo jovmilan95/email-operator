@@ -52,6 +52,7 @@ livenessProbe:
   httpGet:
     path: /healthz
     port: http
+    
 readinessProbe:
   httpGet:
     path: /readyz

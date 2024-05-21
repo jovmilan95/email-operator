@@ -1,5 +1,8 @@
+# Adds namespace to all resources.
+namespace: email-operator
 ## Append samples of your project ##
 resources:
 - email_v1_emailsenderconfig.yaml
 - email_v1_email.yaml
+- secret_v1_mailersent.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples
