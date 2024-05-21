@@ -1,32 +1,23 @@
----
+# permissions for end users to view emailsenderconfigs.
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: manager-role
+  labels:
+    app.kubernetes.io/name: email-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: emailsenderconfig-viewer-role
 rules:
 - apiGroups:
   - email.example.com
   resources:
   - emailsenderconfigs
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
-  - update
   - watch
-- apiGroups:
-  - email.example.com
-  resources:
-  - emailsenderconfigs/finalizers
-  verbs:
-  - update
 - apiGroups:
   - email.example.com
   resources:
   - emailsenderconfigs/status
   verbs:
   - get
-  - patch
-  - update
