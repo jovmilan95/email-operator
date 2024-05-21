@@ -1,0 +1,31 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "helm.fullname" . }}-cluster-role
+  labels:
+    app.kubernetes.io/name: {{ include "helm.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["email.example.com"]
+    resources: ["emails", "emailsenderconfigs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "helm.fullname" . }}-cluster-role-binding
+  labels:
+    app.kubernetes.io/name: {{ include "helm.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "helm.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ include "helm.fullname" . }}-cluster-role
+  apiGroup: rbac.authorization.k8s.io
