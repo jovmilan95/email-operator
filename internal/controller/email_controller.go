@@ -131,10 +131,6 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 	email.Status.DeliveryStatus = "Success"
 	email.Status.Error = ""
 	email.Status.MessageID = res.Header.Get("X-Message-Id")
-	if updateErr := r.Status().Update(ctx, email); updateErr != nil {
-		logger.Error(updateErr, "Failed to update Email status")
-		return ctrl.Result{}, updateErr
-	}
 
 	logger.Info("Email sent successfully",
 		"MessageID", email.Status.MessageID,
@@ -142,6 +138,11 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		"From", emailSenderConfig.Spec.SenderEmail,
 		"To", email.Spec.RecipientEmail,
 	)
+
+	if updateErr := r.Status().Update(ctx, email); updateErr != nil {
+		logger.Error(updateErr, "Failed to update Email status")
+		return ctrl.Result{}, updateErr
+	}
 
 	return ctrl.Result{}, nil
 }
