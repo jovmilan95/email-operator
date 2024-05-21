@@ -30,34 +30,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - id: output-vars
-        name: Generate image tag
-        run: |
-          describe=$(git describe)
-          major=$(echo $describe | cut -d'.' -f1)
-          minor=$(echo $describe | cut -d'.' -f2 | cut -d'-' -f1)
-          commit_count=$(echo $describe | cut -d'-' -f2)
-          image=$major.$minor.$commit_count
-          chart_version=$(cat ./helm/Chart.yaml | grep "version:" | cut -d ' ' -f 2)
-          app_version=$(cat ./helm/Chart.yaml | grep "appVersion:" | cut -d ' ' -f 2)
-          new_chart_version=$(echo $chart_version | awk -F. '{$NF = $NF + 1;} 1' | sed 's/ /./g')
-
-          echo "image=$image" >> "$GITHUB_OUTPUT"
-          echo "chart_version=$chart_version" >> "$GITHUB_OUTPUT"
-          echo "app_version=$app_version" >> "$GITHUB_OUTPUT"
-          echo "new_chart_version=$new_chart_version" >> "$GITHUB_OUTPUT"
 
       - name: Build and Push
-        run: make docker-build docker-push IMG=${{ env.repository }}:${{ steps.output-vars.outputs.image }}
-
-      - name: Bump Chart Version
-        run: |
-          sed -i "s/version: ${{ steps.output-vars.outputs.chart_version }}/version: ${{ steps.output-vars.outputs.new_chart_version }}/g" ./helm/Chart.yaml
-          sed -i "s/appVersion: ${{ steps.output-vars.outputs.app_version }}/appVersion: ${{ steps.output-vars.outputs.image }}/g" ./helm/Chart.yaml
-
-      - name: Commit changes
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -am "Bump Helm chart version to ${{ steps.output-vars.outputs.new_chart_version }}"
-          git push
+        run: make docker-build docker-push IMG=${{ env.repository }}:latest
