@@ -16,13 +16,7 @@ email-operator is a Kubernetes operator designed for efficient email configurati
 make docker-build docker-push IMG=<some-registry>/email-operator:tag
 ```
 
-**Install the CRDs into the cluster:**
-
-```sh
-make install
-```
-
-**Deploy the Manager to the cluster with the image specified by `IMG`:**
+**Deploy the operator to the cluster with the image specified by `IMG`:**
 
 ```sh
 make deploy IMG=<some-registry>/email-operator:tag
@@ -45,13 +39,7 @@ kubectl apply -k config/samples/
 kubectl delete -k config/samples/
 ```
 
-**Delete the APIs(CRDs) from the cluster:**
-
-```sh
-make uninstall
-```
-
-**UnDeploy the controller from the cluster:**
+**UnDeploy the operator from the cluster:**
 
 ```sh
 make undeploy
