@@ -27,7 +27,7 @@ make install
 ```sh
 make deploy IMG=<some-registry>/email-operator:tag
 ```
-**NOTE:** Image is automatically built and pushed to jovmilan95/email-operator:latest using GitHub Actions and is publicly available.Here is the link to the DockerHub: [DockerHub Repository](https://hub.docker.com/r/jovmilan95/email-operator)
+**NOTE:** Image is automatically built and pushed to `jovmilan95/email-operator:latest` using GitHub Actions and is publicly available.Here is the link to the DockerHub: [DockerHub Repository](https://hub.docker.com/r/jovmilan95/email-operator)
 
 **Create instances of your solution**
 You can apply the samples (examples) from the config/sample:
