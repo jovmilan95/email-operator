@@ -30,6 +30,9 @@ type EmailSenderConfigSpec struct {
 
 	APITokenSecretRef string `json:"apiTokenSecretRef"`
 	SenderEmail       string `json:"senderEmail"`
+	// +kubebuilder:validation:Enum=mailersend;mailgun
+	Provider string `json:"provider"`
+	Domain   string `json:"domain"`
 }
 
 // EmailSenderConfigStatus defines the observed state of EmailSenderConfig

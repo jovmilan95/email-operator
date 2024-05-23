@@ -1,0 +1,35 @@
+apiVersion: v1
+data:
+  apiToken: bWxzbi5hMTkyNmExMmU4NTZjMzJkMGI1ZWVhOGY4NDgwNjM4MWNkMWQyNTkxOWM1ODdkMDAxZjE5YWI3YjBkN2MwZDEx
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: mailersend
+---
+apiVersion: email.example.com/v1
+kind: EmailSenderConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: email-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: mailersend-config
+spec:
+  apiTokenSecretRef: "mailersend"
+  senderEmail: "test@trial-z3m5jgrykod4dpyo.mlsender.net"
+  provider: "mailersend"
+  domain: "trial-z3m5jgrykod4dpyo.mlsender.net"
+---
+apiVersion: email.example.com/v1
+kind: Email
+metadata:
+  labels:
+    app.kubernetes.io/name: email-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: hello-from-mailersend
+spec:
+ senderConfigRef: "mailersend-config"
+ recipientEmail: "it.bootcamp.drive2@gmail.com"
+ subject: "Hello from mailsend!"
+ body: "Hey, this email was sent via the mailsend provider."
+---
+

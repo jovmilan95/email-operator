@@ -1,0 +1,36 @@
+apiVersion: v1
+data:
+  apiToken: YTk2MGM4MzMyZTBhZWMyMDllNzhjNjY2ZTM0NmVjNDMtYTJkZDQwYTMtMTRiODIwY2M=
+kind: Secret
+metadata:
+  creationTimestamp: null
+  name: mailgun
+---
+apiVersion: email.example.com/v1
+kind: EmailSenderConfig
+metadata:
+  labels:
+    app.kubernetes.io/name: email-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: mailgun-config
+spec:
+  apiTokenSecretRef: "mailgun"
+  senderEmail: "test@sandbox8454291b9c6b40efb729280c3675f08a.mailgun.org"
+  provider: "mailgun"
+  domain: "sandbox8454291b9c6b40efb729280c3675f08a.mailgun.org"
+---
+apiVersion: email.example.com/v1
+kind: Email
+metadata:
+  labels:
+    app.kubernetes.io/name: email-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: hello-from-mailgun
+spec:
+ senderConfigRef: "mailgun-config"
+ recipientEmail: "it.bootcamp.drive2@gmail.com"
+ subject: "Hello from mailgun!"
+ body: "Hey, this email was sent via the mailgun provider."
+---
+
+

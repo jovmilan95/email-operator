@@ -20,7 +20,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mailersend/mailersend-go"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -31,6 +30,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	emailv1 "email-operator/api/v1"
+	"email-operator/internal/thirdparty"
 )
 
 // EmailReconciler reconciles a Email object
@@ -42,6 +42,10 @@ type EmailReconciler struct {
 //+kubebuilder:rbac:groups=email.example.com,resources=emails,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=email.example.com,resources=emails/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=email.example.com,resources=emails/finalizers,verbs=update
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=coordination.k8s.io,resources=leases,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -98,27 +102,16 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		return ctrl.Result{}, err
 	}
 
-	apiToken := string(secret.Data["apiToken"])
-	subject := email.Spec.Subject
-	text := email.Spec.Body
-	from := mailersend.From{
-		Name:  emailSenderConfig.Spec.SenderEmail,
-		Email: emailSenderConfig.Spec.SenderEmail,
-	}
-	recipients := []mailersend.Recipient{
-		{
-			Name:  email.Spec.RecipientEmail,
-			Email: email.Spec.RecipientEmail,
-		},
-	}
-	ms := mailersend.NewMailersend(apiToken)
-	message := ms.Email.NewMessage()
-	message.SetFrom(from)
-	message.SetRecipients(recipients)
-	message.SetSubject(subject)
-	message.SetText(text)
+	res, err := (&thirdparty.MailClient{
+		Provider:  emailSenderConfig.Spec.Provider,
+		ApiToken:  string(secret.Data["apiToken"]),
+		Recipient: email.Spec.RecipientEmail,
+		Subject:   email.Spec.Subject,
+		From:      emailSenderConfig.Spec.SenderEmail,
+		Text:      email.Spec.Body,
+		Domain:    emailSenderConfig.Spec.Domain,
+	}).SendEmail()
 
-	res, err := ms.Email.Send(ctx, message)
 	if err != nil {
 		email.Status.DeliveryStatus = "Failed"
 		email.Status.Error = fmt.Sprintf("Failed to send email: %v", err)
@@ -128,12 +121,13 @@ func (r *EmailReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl
 		}
 		return ctrl.Result{}, err
 	}
-	email.Status.DeliveryStatus = "Success"
+	email.Status.DeliveryStatus = res.DeliveryStatus
 	email.Status.Error = ""
-	email.Status.MessageID = res.Header.Get("X-Message-Id")
+	email.Status.MessageID = res.MessageID
 
 	logger.Info("Email sent successfully",
 		"MessageID", email.Status.MessageID,
+		"DeliveryStatus", res.DeliveryStatus,
 		"Subject", email.Spec.Subject,
 		"From", emailSenderConfig.Spec.SenderEmail,
 		"To", email.Spec.RecipientEmail,
