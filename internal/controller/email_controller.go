@@ -20,6 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	emailv1 "email-operator/api/v1"
+	"email-operator/internal/thirdparty"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,8 +31,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
-	emailv1 "email-operator/api/v1"
 )
 
 // EmailReconciler reconciles a Email object

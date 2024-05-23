@@ -7,6 +7,7 @@ email-operator is a Kubernetes operator designed for efficient email configurati
 - docker version 17.03+.
 - kubectl version v1.11.3+.
 - Access to a Kubernetes v1.11.3+ cluster.
+- kustomize v5.4.1+
 
 ### Deploy the email-operator using kustomize, run the following command:
 ```sh
