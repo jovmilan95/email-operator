@@ -21,17 +21,17 @@ make docker-build docker-push IMG=<some-registry>/email-operator:tag
 ```sh
 make deploy IMG=<some-registry>/email-operator:tag
 ```
+
 **NOTE:** Image is automatically built and pushed to `jovmilan95/email-operator:latest` using GitHub Actions and is publicly available.Here is the link to the DockerHub: [DockerHub Repository](https://hub.docker.com/r/jovmilan95/email-operator)
 
-**Create instances of your solution**
+**Apply test samples**
 
-You can apply the samples (examples) from the config/sample:
+You can apply the samples (examples) from the config/samples:
 
 ```sh
 kubectl apply -k config/samples/
 ```
 
-**NOTE**: Ensure that the samples has default values to test it out.
 
 ### To Uninstall
 **Delete the instances (CRs) from the cluster:**
