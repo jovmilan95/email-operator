@@ -9,20 +9,12 @@ email-operator is a Kubernetes operator designed for efficient email configurati
 - Access to a Kubernetes v1.11.3+ cluster.
 - kustomize v5.4.1+
 
-### Deploy the email-operator using kustomize, run the following command:
-```sh
-kustomize config/default/ | kubectl apply -f -
-```
 ### To Deploy on the cluster
 **Build and push your image to the location specified by `IMG`:**
 
 ```sh
 make docker-build docker-push IMG=<some-registry>/email-operator:tag
 ```
-
-**NOTE:** This image ought to be published in the personal registry you specified.
-And it is required to have access to pull the image from the working environment.
-Make sure you have the proper permission to the registry if the above commands don’t work.
 
 **Install the CRDs into the cluster:**
 
@@ -36,8 +28,7 @@ make install
 make deploy IMG=<some-registry>/email-operator:tag
 ```
 
-> **NOTE**: If you encounter RBAC errors, you may need to grant yourself cluster-admin
-privileges or be logged in as admin.
+> **NOTE:** Image is automatically built and pushed to jovmilan95/email-operator:latest using GitHub Actions and is publicly available.
 
 **Create instances of your solution**
 You can apply the samples (examples) from the config/sample:
