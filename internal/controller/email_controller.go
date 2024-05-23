@@ -30,7 +30,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 
 	emailv1 "email-operator/api/v1"
-	"email-operator/internal/thirdparty"
 )
 
 // EmailReconciler reconciles a Email object
