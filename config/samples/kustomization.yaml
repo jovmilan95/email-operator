@@ -1,7 +1,0 @@
-# Adds namespace to all resources.
-namespace: email-operator
-## Append samples of your project ##
-resources:
-- mailersend_samples.yaml
-- mailgun_samples.yaml
-#+kubebuilder:scaffold:manifestskustomizesamples
